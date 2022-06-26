@@ -53,7 +53,7 @@ const displayTodoItem = ({
 
   const btnDelete = document.createElement('button'); 
   btnDelete.className = 'button'; 
-  btnDelete.innerText = '✖'; 
+  btnDelete.innerHTML = '<span class="iconify" data-icon="vs:chicken" style="color: green;" data-width="16" data-height="16"></span>'; 
   btnDelete.addEventListener('click', async () => {
     await ApiService.deleteTodo(id);
     todoItem.remove();
