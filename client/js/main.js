@@ -1,29 +1,82 @@
-const todoList = document.querySelector('.js-todo-list');
-const formAddTodo = document.querySelector('.js-add-todo-form');
+import FormComponent from "./components/form-component.js";
+import todoValidator from "./helpers/validators/todo-validator.js";
+import ApiService from "./helpers/api-service.js";
 
-formAddTodo.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const todoListValue = formAddTodo[0].value;
+const todoList = document.querySelector('.js-todo-list'); 
+// const updateFormModal = new bootstrap.Modal('#update-form-modal');
+const updateTitleField = document.querySelector('#update-title-input');
+const updateCompletedField = document.querySelector('#update-completed-input');
+const btnUpdateTodo = document.querySelector('#btn-update-todo');
+let editableTodoId = null;
+let editableTodoItemText = null;
+let editableCheckbox = null;
 
-  todoList.innerHTML += `
-  <div class="todo-list__item">
-    <div class="checkbox"></div>
-    <div class="todo-list__item__text">${todoListValue}</div> 
-    <button class="button">✖</button>
-  </div>`;
-});
-
-  const todoList2 = document.querySelector('.js-todo-list-2');
-
-  const displayItems2 = (items) => items.forEach(({ completed, title }) => {
-    todoList2.innerHTML += `
-    <div class="todo-list__item">
-    <div class="checkbox${completed ? ' checked' : ''}"></div>
-    <div class="todo-list__item__text">${title}</div>
-    <button class="button-2"><span class="iconify" data-icon="vs:chicken" style="color: green;" data-width="20" data-height="20"></span></button>
-  </div>`;
+const updateTodo = async () => {
+  const { title, completed } = await ApiService.updateTodo({
+    id: editableTodoId,
+    title: updateTitleField.value,
+    completed: updateCompletedField.checked,
   });
 
-  fetch('https://jsonplaceholder.typicode.com/todos?userId=5')
-  .then(response => response.json())
-  .then(displayItems2);
+  editableTodoItemText.innerText = title;
+  editableCheckbox.classList.remove('checked');
+  if (completed) editableCheckbox.classList.add('checked');
+
+  editableTodoId = null;
+  editableTodoItemText = null;
+  editableCheckbox = null;
+}
+
+const displayTodoItem = ({
+  completed,
+  title,
+  id,
+}) => {
+  const todoItem = document.createElement('div'); 
+  todoItem.className = 'todo-list__item'; 
+
+  const checkbox = document.createElement('div');  
+  checkbox.className = 'checkbox';  
+  if (completed) checkbox.classList.add('checked'); 
+  checkbox.addEventListener('click', async () => {
+    await ApiService.updateTodo({
+      id,
+      completed: !checkbox.classList.contains('checked')
+    });
+
+    checkbox.classList.toggle('checked');
+  });
+
+  const todoItemText = document.createElement('div'); 
+  todoItemText.className = 'todo-list__item__text'; 
+  todoItemText.innerText = title; 
+
+  const btnDelete = document.createElement('button'); 
+  btnDelete.className = 'button'; 
+  btnDelete.innerText = '✖'; 
+  btnDelete.addEventListener('click', async () => {
+    await ApiService.deleteTodo(id);
+    todoItem.remove();
+  });
+
+  todoItem.append(  
+    checkbox,       
+    todoItemText,   
+    btnDelete       
+  );                
+  
+  todoList.insertAdjacentElement('afterBegin', todoItem);
+}
+
+const formAddTodo = new FormComponent(
+  '.js-add-todo-form', 
+  todoValidator, 
+  async ({ title }) => {
+    const createdTodo = await ApiService.createTodo({ title });
+    displayTodoItem(createdTodo);
+  },
+);
+
+const todos = await ApiService.fetchTodos();
+todos.forEach(displayTodoItem);
+

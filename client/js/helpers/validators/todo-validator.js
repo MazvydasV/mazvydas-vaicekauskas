@@ -2,7 +2,7 @@ import Validator from '../validator.js';
 
 const todoValidator = ({ title }) => {
   const errors = {};
-
+  
   const titleValidator = new Validator(title)
     .required('Privalomas pavadinimas')
     .min(4, 'Mažiausiai 4 simboliai')

@@ -81,6 +81,7 @@ class FormComponent {
     this.#htmlElement.addEventListener('submit', (event) => {
       event.preventDefault();
       this.clearFieldsErrors();
+      console.log(this.values);
 
       if (this.isValid) {
         this.#onSuccess(this.values);
